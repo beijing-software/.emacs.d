@@ -1,0 +1,878 @@
+#+TITLE: Emacs Configuration File
+
+* Emacs
+** Performance
+#+begin_src emacs-lisp
+  (setq gc-cons-threshold 100000000)
+  (setq read-process-output-max (* 1024 1024))
+  (add-hook 'after-init-hook #'(lambda ()
+                                 (setq gc-cons-threshold 800000)))
+#+end_src
+
+** Autosave|Backups|Lockfiles
+#+begin_src emacs-lisp
+  (defconst emacs-tmp-dir (expand-file-name (format "emacs%d" (user-uid)) temporary-file-directory))
+  (setq
+   backup-by-copying t
+   delete-old-versions t
+   kept-new-versions 6
+   kept-old-versions 2
+   version-control t
+   auto-save-list-file-prefix emacs-tmp-dir
+   auto-save-file-name-transforms `((".*" ,emacs-tmp-dir t))
+   backup-directory-alist `((".*" . ,emacs-tmp-dir)))
+  (setq create-lockfiles nil)
+#+end_src
+
+** Menubar|Toolbar|Scrollbar|Tooltip
+#+begin_src emacs-lisp
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
+  (tooltip-mode -1)
+#+end_src
+
+** Fringe
+#+begin_src emacs-lisp
+  (set-fringe-mode 0)
+#+end_src
+
+** Scrolling
+#+begin_src emacs-lisp
+  (setq scroll-preserve-screen-position t
+        scroll-conservatively 101
+        mouse-wheel-scroll-amount '(1 ((shift) . 1))
+        mouse-wheel-progressive-speed nil
+        scroll-margin 0
+        scroll-step 1
+        hscroll-step 1
+        hscroll-margin 0
+        scroll-up-aggressively 0.01
+        scroll-down-aggressively 0.01
+        redisplay-dont-pause t
+        fast-but-imprecise-scrolling t)
+#+end_src
+
+** UI Enhancement
+#+begin_src emacs-lisp
+  (setq-default cursor-type 'box)
+  (global-hl-line-mode t)
+  (global-prettify-symbols-mode t)
+  (display-time-mode 1)
+#+end_src
+
+** Line Numbers
+#+begin_src emacs-lisp
+  (defun enable-line-numbers ()
+    (setq-local display-line-numbers-width 3)
+    (display-line-numbers-mode))
+
+  (add-hook 'prog-mode-hook #'enable-line-numbers)
+#+end_src
+
+** Wrapping
+#+begin_src emacs-lisp
+  (defun enable-truncate-lines ()
+    (setq-local truncate-lines t))
+
+  (add-hook 'prog-mode-hook #'enable-truncate-lines)
+#+end_src
+
+** Misc
+#+begin_src emacs-lisp
+  (setq ring-bell-function 'ignore)
+  (fset 'yes-or-no-p 'y-or-n-p)
+  (global-auto-revert-mode t)
+  (delete-selection-mode 1)
+  (show-paren-mode 1)
+  (setq initial-scratch-message "")
+  (setq inhibit-splash-screen t)
+  (setq-default frame-title-format '("emacs"))
+  (setq warning-minimum-level :error)
+  (setq confirm-nonexistent-file-or-buffer nil)
+  (add-hook 'after-init-hook (lambda () (message nil)))
+#+end_src
+  
+
+* Package Management
+** Package.el
+#+begin_src emacs-lisp
+  (require 'package)
+  (setq package-enable-at-startup nil)
+  (add-to-list 'package-archives (cons "melpa" "https://melpa.org/packages/"))
+  (add-to-list 'package-archives (cons "jcs-elpa" "https://jcs-emacs.github.io/jcs-elpa/packages/"))
+#+end_src
+
+** Use-Package
+#+begin_src emacs-lisp
+  (unless (package-installed-p 'use-package)
+    (package-refresh-contents)
+    (package-install 'use-package))
+  (eval-when-compile
+    (require 'use-package))
+  (setq use-package-always-ensure t)
+#+end_src
+
+** Straight
+#+begin_src emacs-lisp
+  (defvar bootstrap-version)
+  (let ((bootstrap-file
+         (expand-file-name "straight/repos/straight.el/bootstrap.el" user-emacs-directory))
+        (bootstrap-version 6))
+    (unless (file-exists-p bootstrap-file)
+      (with-current-buffer
+          (url-retrieve-synchronously
+           "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+           'silent 'inhibit-cookies)
+        (goto-char (point-max))
+        (eval-print-last-sexp)))
+    (load bootstrap-file nil 'nomessage))
+#+end_src
+
+
+* Appearance
+** Font
+#+begin_src emacs-lisp
+  ;;(set-face-attribute 'default nil :font "Hack Nerd Font Mono 11")
+  (set-face-attribute 'default nil :font "FiraCode Nerd Font Mono" :height 130)
+#+end_src
+
+** Theme
+#+begin_src emacs-lisp
+  (use-package modus-themes)
+  (use-package doom-themes)
+  (use-package vscode-dark-plus-theme)
+  (use-package sexy-monochrome-theme)
+  (use-package tron-legacy-theme
+    :config
+    (setq tron-legacy-theme-vivid-cursor nil)
+    (setq tron-legacy-theme-dark-fg-bright-comments nil)
+    (setq tron-legacy-theme-softer-bg nil))
+  (use-package color-theme-sanityinc-tomorrow)
+  (use-package atom-one-dark-theme)
+
+  ;; (load-theme 'doom-palenight t)'
+  ;; (load-theme 'atom-one-dark t)
+  ;; (load-theme 'modus-vivendi t)
+  ;; (load-theme 'doom-henna t)
+  ;; (load-theme 'vscode-dark-plus t)
+  ;; (load-theme 'doom-one t)
+  ;; (load-theme 'doom-vibrant t)
+  ;; (load-theme 'doom-plain-dark t)
+  ;; (load-theme 'doom-ir-black t)
+  ;; (load-theme 'doom-gruvbox t)
+  ;; (load-theme 'doom-nord t)
+  ;; (load-theme 'wheatgrass t)
+  ;; (load-theme 'tron-legacy t)
+  ;; (load-theme 'doom-monokai-machine t)
+  (load-theme 'sanityinc-tomorrow-night t)
+  ;; (load-theme 'sexy-monochrome t)
+#+end_src
+
+** Window Transparency
+#+begin_src emacs-lisp
+  (set-frame-parameter (selected-frame) 'alpha '(90 90))
+  (add-to-list 'default-frame-alist '(alpha 90 90))
+#+end_src
+
+** Modeline
+#+begin_src emacs-lisp
+  (set-face-attribute 'mode-line nil :background nil :foreground "WhiteSmoke")
+  (set-face-attribute 'mode-line-inactive nil :background nil :foreground "DarkGrey")
+  (set-face-attribute 'mode-line nil
+                      :box '(:line-width 1 :color "WhiteSmoke" :style flat-button))
+#+end_src
+
+** Doom Modeline
+#+begin_src emacs-lisp
+  (use-package doom-modeline
+    :config
+    ;; If you need full path to file in buffer
+    ;; (setq doom-modeline-buffer-file-name-style 'truncate-upto-project)
+    (setq doom-modeline-buffer-encoding nil)
+    (setq doom-modeline-major-mode-icon nil)
+    ;; (setq doom-modeline-buffer-state-icon nil)
+    (setq doom-modeline-time-icon nil)
+    (setq doom-modeline-enable-word-count t)
+    ;; (setq all-the-icons-scale-factor 1.1)
+    (setq display-time-default-load-average nil)
+    (setq display-time-format "%a %d %I:%M %p")
+    (doom-modeline-mode 1)
+    :custom
+    (doom-modeline-height 75)
+    )
+#+end_src
+
+** All-The-Icons
+#+begin_src emacs-lisp
+  (use-package all-the-icons
+    :config
+    ;; (setq all-the-icons-color-icons nil)
+    ;; (custom-set-faces
+    ;;   '(all-the-icons-face ((t (:foreground "#00ffcc")))) ; set the foreground color to a cyan/green color
+    ;;   '(all-the-icons-ivy-buffer-match-face ((t (:foreground "#00ffcc"))))) ; set the foreground color to a cyan/green color
+    )
+#+end_src
+
+** Autothemer
+#+begin_src emacs-lisp
+  (use-package autothemer)
+#+end_src
+
+
+* Development
+** Electric Pairs
+#+begin_src emacs-lisp
+  (electric-pair-mode t)
+  (setq electric-pair-inhibit-predicate (lambda (c) (char-equal c ?<)))
+#+end_src
+
+** Undo-Tree
+#+begin_src emacs-lisp
+  (use-package undo-tree
+    :init (global-undo-tree-mode)
+    :config (setq-default undo-tree-auto-save-history nil))
+#+end_src
+
+** Rainbow-Mode
+#+begin_src emacs-lisp
+  (use-package rainbow-mode)
+#+end_src
+
+** Sudo-Edit
+#+begin_src emacs-lisp
+  (use-package sudo-edit
+    :config
+    (setq sudo-edit-local-method "doas"))
+#+end_src
+
+** Rainbow-Delimiters
+#+begin_src emacs-lisp
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
+
+** Popup-Kill-Ring
+#+begin_src emacs-lisp
+  (use-package popup-kill-ring
+    :config
+    (global-set-key (kbd "M-y") 'popup-kill-ring))
+#+end_src
+
+** Drag-Stuff
+#+begin_src emacs-lisp
+  (use-package drag-stuff
+    :config
+    (drag-stuff-global-mode 1)
+    (global-set-key (kbd "M-p") 'drag-stuff-up)
+    (global-set-key (kbd "M-n") 'drag-stuff-down))
+#+end_src
+
+** Yafolding
+#+begin_src emacs-lisp
+  (use-package yafolding
+    :config
+    (add-hook 'prog-mode-hook
+              (lambda () (yafolding-mode))))
+#+end_src
+
+** Highlight-Indent-Guides
+#+begin_src emacs-lisp
+  (use-package highlight-indent-guides
+    :config
+    (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
+    (setq highlight-indent-guides-method 'character)
+    (setq highlight-indent-guides-responsive 'topmost))
+#+end_src
+
+** Multiple Cursors
+#+begin_src emacs-lisp
+  (use-package multiple-cursors
+    :config
+    (global-set-key (kbd "C-`") 'mc/edit-lines))
+#+end_src
+
+
+* IDE
+** Ivy
+#+begin_src emacs-lisp
+  (use-package ivy
+    :config
+    (setq ivy-height 20)
+    (global-set-key (kbd "C-s") 'swiper))
+#+end_src
+
+** Counsel
+#+begin_src emacs-lisp
+  (use-package counsel
+    :config
+    (global-set-key (kbd "C-x C-b") 'counsel-switch-buffer))
+#+end_src
+
+** Helm
+#+begin_src emacs-lisp
+  (use-package helm
+    :ensure t
+    :config
+    (require 'helm-files)
+    (define-key helm-map (kbd "TAB") 'helm-execute-persistent-action)
+    (define-key helm-map (kbd "<tab>") 'helm-execute-persistent-action)
+    (define-key helm-find-files-map (kbd "C-<backspace>") 'helm-find-files-up-one-level)
+    (setq helm-find-files-doc-header nil)
+    (global-set-key (kbd "M-x") 'helm-M-x)
+    (global-set-key (kbd "C-x C-f") 'helm-find-files))
+
+  (use-package helm-icons
+    :config
+    (setq helm-icons-provider 'all-the-icons)
+    (helm-icons-enable))
+#+end_src
+
+** Yasnippet
+#+begin_src emacs-lisp
+  (use-package yasnippet
+    :config
+    ;; (setq yas-snippet-dirs '("~/Documents/snippets/"))
+    (yas-global-mode))
+#+end_src
+
+** Flycheck
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :init (global-flycheck-mode)
+    :config
+    ;; (setq flycheck-highlighting-mode 'symbols)
+    ;; (setq flycheck-error-list-minimum-level 'error)
+    (set-face-attribute 'flycheck-error nil :underline '(:style line :color "red3" :weight bold))
+    (set-face-attribute 'flycheck-warning nil :underline nil)
+    (set-face-attribute 'flycheck-info nil :underline nil)
+    ;; (setq flycheck-indication-mode nil)
+    (custom-set-faces
+     '(flycheck-error ((t (:underline (:style line :color "#ff87d7")))))
+     '(flycheck-warning ((t (:underline (:style line :color "#ffaf00")))))
+     '(flycheck-info ((t (:underline (:style line :color "#87d7ff"))))))
+    )
+#+end_src
+
+** Company
+#+begin_src emacs-lisp
+  (use-package company
+    ;; :init
+    ;; (add-hook 'after-init-hook 'global-company-mode)
+    :config
+    (global-company-mode 1)
+    (setq company-text-icons-add-background t)
+    :bind
+    (:map company-active-map ("<tab>" . company-complete-selection))
+    (:map company-active-map ("<return>" . nil))
+    (:map company-active-map ("RET" . nil)))
+#+end_src
+
+** Treemacs
+#+begin_src emacs-lisp
+  (use-package treemacs
+    :config
+    (treemacs-hide-gitignored-files-mode t)
+    (setq treemacs-width-is-initially-locked nil))
+  (with-eval-after-load 'treemacs
+
+    (defun treemacs-ignore-example (filename absolute-path)
+      (or (string-equal filename "foo")
+          (string-suffix-p ".class" absolute-path)))
+
+    (add-to-list 'treemacs-ignored-file-predicates #'treemacs-ignore-example))
+#+end_src
+
+** Neotree
+#+begin_src emacs-lisp
+  (use-package neotree
+    :config
+    ;; Set options for neotree
+    (setq neo-smart-open t
+          neo-show-hidden-files t
+          neo-theme (if (display-graphic-p) 'icons 'arrow))
+    ;; Toggle neotree
+    (defun c/toggle-neotree-sidebar ()
+      "Toggle the NeoTree sidebar."
+      (interactive)
+      (if (neo-global--window-exists-p)
+          (progn
+            (neo-buffer--unlock-width)
+            (delete-window neo-global--window))
+        (neotree)))
+    ;; (global-set-key (kbd "C-d") 'c/toggle-neotree-sidebar)
+    ;; Remove header line after neotree is created
+    (add-hook 'neo-after-create-hook
+              (lambda (&rest _) (setq-local header-line-format nil)))
+
+    ;; Set key bindings for neotree mode
+    :bind (:map neotree-mode-map
+                ("<return>" . my-neotree-enter)
+                ("C-<return>" . my-neotree-enter)
+                ("<delete>" . neotree-delete-node))
+
+    ;; Define function to open file or enter directory
+    :init
+    (defun my-neotree-enter ()
+      (interactive)
+      (if (file-directory-p (neo-buffer--get-filename-current-line))
+          (neotree-change-root)
+        (neotree-enter)))
+
+    ;; Show/Hide on startup
+    (add-hook 'after-init-hook (lambda ()
+                                 (neotree-show)
+                                 (neotree-hide)))
+    )
+#+end_src
+
+** Shell-Pop
+#+begin_src emacs-lisp
+  (use-package shell-pop
+    :config
+    (setq shell-pop-shell-type (quote ("ansi-term" "*ansi-term*" (lambda nil (ansi-term shell-pop-term-shell)))))
+    (setq shell-pop-term-shell "/bin/bash")
+    (setq shell-pop-autocd-to-working-dir t)
+    (setq shell-pop-restore-window-configuration t)
+    (setq shell-pop-cleanup-buffer-at-process-exit t)
+    (global-set-key (kbd "C-t") 'shell-pop))
+#+end_src
+
+** Projectile
+#+begin_src emacs-lisp
+  (use-package projectile
+    :diminish projectile-mode
+    :config (projectile-mode)
+    :custom ((projectile-completion-system 'ivy))
+    :bind-keymap
+    ("C-c p" . projectile-command-map)
+    :init
+    (when (file-directory-p "~/Documents/code")
+      (setq projectile-project-search-path '("~/Documents/code"))))
+#+end_src
+
+** Counsel Projectile
+#+begin_src emacs-lisp
+  (use-package counsel-projectile
+    :config (counsel-projectile-mode))
+#+end_src
+
+** Magit
+#+begin_example
+  ;;(use-package magit
+  ;;  :custom
+  ;;  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+#+end_example
+
+** LSP
+#+begin_src emacs-lisp
+  (use-package lsp-mode
+    :commands (lsp lsp_deferred)
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :config
+    (lsp-enable-which-key-integration t)
+    (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+    (lsp-headerline-breadcrumb-mode)
+    )
+#+end_src
+
+** LSP-UI
+#+begin_src emacs-lisp
+  (use-package lsp-ui
+    :hook (lsp-mode . lsp-ui-mode))
+#+end_src
+
+** LSP-Treemacs
+#+begin_src emacs-lisp
+  (use-package lsp-treemacs
+    :after lsp)
+#+end_src
+
+** LSP-Ivy
+#+begin_src  emacs-lisp
+  (use-package lsp-ivy)
+#+end_src
+
+** LSP-Java
+#+begin_src emacs-lisp
+  (use-package lsp-java)
+#+end_src
+
+** Company
+#+begin_src emacs-lisp
+  (use-package company
+    :after lsp-mode
+    ;; :hook (prog-mode . lsp-mode)
+    :bind
+    (:map company-active-map
+          ("<tab>" . company-complete-selection))
+    (:map lsp-mode-map
+          ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
+#+end_src
+
+
+* AI
+** ChatGPT
+#+begin_src emacs-lisp
+  (use-package chatgpt
+    :straight (:host github :repo "joshcho/ChatGPT.el" :files ("dist" "*.el"))
+    :init
+    (require 'python)
+    (setq chatgpt-repo-path "~/.emacs.d/straight/repos/ChatGPT.el/")
+    (setq python-interpreter "python")
+    :bind ("C-c q" . chatgpt-query))
+#+end_src
+
+** EPC
+#+begin_src emacs-lisp
+  (use-package epc)
+#+end_src
+    
+
+* Term
+** Ansi Term
+#+begin_src emacs-lisp
+  (defvar my-term-shell "/bin/bash")
+  (defadvice ansi-term (before force-bash)
+    (interactive (list my-term-shell)))
+  (ad-activate 'ansi-term)
+  (global-set-key (kbd "C-M-t") 'ansi-term)
+#+end_src
+
+** Term
+#+begin_src emacs-lisp
+  (use-package term
+    :config
+    (setq explicit-shell-file-name "bash"))
+#+end_src
+
+** Eterm-256color
+#+begin_src emacs-lisp
+  (use-package eterm-256color
+    :hook (term-mode . eterm-256color-mode))
+#+end_src
+
+** Eshell-Git-Prompt
+#+begin_src emacs-lisp
+  (use-package eshell-git-prompt)
+#+end_src
+
+
+* Window
+** Tab Bar
+#+begin_src emacs-lisp
+  ;; (tab-bar-mode)
+  (setq tab-bar-close-button-show nil)
+  (setq tab-bar-new-button-show nil)
+  (setq tab-bar-new-tab-choice (lambda () (get-buffer-create "*scratch*")))
+  (setq tab-bar-new-tab-to 'rightmost)
+  (set-face-attribute 'tab-bar nil :height 0.8)
+  (global-set-key (kbd "C-=") 'tab-bar-new-tab)
+  (global-set-key (kbd "C--") 'tab-bar-close-tab)
+#+end_src
+
+** Switch-Window
+#+begin_src emacs-lisp
+  (use-package switch-window
+    :config
+    (setq switch-window-shortcut-style 'qwerty))
+#+end_src
+
+
+* Org
+** Org Mode
+#+begin_src emacs-lisp
+  (use-package org
+    :config
+    (setq org-ellipsis " ▾")
+    (setq org-src-window-setup 'current-window)
+    (add-hook 'org-mode-hook (lambda () (org-indent-mode)))
+    (add-hook 'org-mode-hook (lambda () (visual-line-mode)))
+    (font-lock-add-keywords 'org-mode
+                            '(("^ *\\([-]\\) "
+                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+    (dolist (face '((org-level-1 . 1.2)
+                    (org-level-2 . 1.1)
+                    (org-level-3 . 1.05)
+                    (org-level-4 . 1.0)
+                    (org-level-5 . 1.1)
+                    (org-level-6 . 1.1)
+                    (org-level-7 . 1.1)
+                    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "Ubuntu" :weight 'bold :height (cdr face))))
+#+end_src
+
+** Org-Bullets
+#+begin_src emacs-lisp
+  (use-package org-bullets
+    :after org
+    :hook (org-mode . org-bullets-mode)
+    :custom
+    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+#+end_src
+
+** Org Tempo
+#+begin_src emacs-lisp
+  (require 'org-tempo)
+  (add-to-list 'org-structure-template-alist
+               '("el" . "src emacs-lisp"))
+#+end_src
+
+
+* EXWM
+** EXWM
+#+begin_src emacs-lisp
+  ;; (use-package exwm
+  ;;   :init
+  ;;   (setq exwm-workspace-number 10)
+  ;;   :config
+  ;;   (display-battery-mode t)
+  ;;   (setq exwm-floating-border-width 3)
+  ;;   ;; (exwm-enable)
+  ;;   (setq mouse-autoselect-window t
+  ;; 	focus-follows-mouse t))
+#+end_src
+
+** Insecure-Lock
+#+begin_src emacs-lisp
+  ;; (use-package insecure-lock
+  ;;   :config
+  ;;   (insecure-lock-run-idle 900)
+  ;;   (setq insecure-lock-require-password t)
+  ;;   (setq insecure-lock-blank-screen t))
+#+end_src
+
+
+* Functions
+** reload-config
+#+begin_src emacs-lisp
+  (defun c/reload-config ()
+    "Reload the user's init.org file."
+    (interactive)
+    (load "~/.emacs.d/init.el"))
+  (global-set-key (kbd "C-c r") 'c/reload-config)
+#+end_src
+
+** h-split
+#+begin_src emacs-lisp
+  (defun c/h-split ()
+    (interactive)
+    (split-window-below)
+    (balance-windows)
+    (other-window 1))
+  (global-set-key (kbd "C-x 2") 'c/h-split)
+  ;; (global-set-key (kbd "C-h") 'c/h-split)
+#+end_src
+
+** v-split
+#+begin_src emacs-lisp
+  (defun c/v-split ()
+    (interactive)
+    (split-window-right)
+    (balance-windows)
+    (other-window 1))
+  (global-set-key (kbd "C-x 3") 'c/v-split)
+  ;; (global-set-key (kbd "C-v") 'c/v-split)
+#+end_src
+
+** remove-window
+#+begin_src emacs-lisp
+  (defun c/remove-window ()
+    (interactive)
+    (delete-window)
+    (balance-windows))
+  ;; (global-set-key (kbd "C-q") 'c/remove-window)
+#+end_src
+
+** kill-current-buffer
+#+begin_src emacs-lisp
+  (defun c/kill-current-buffer ()
+    (interactive)
+    (kill-buffer (current-buffer)))
+  ;; (global-set-key (kbd "C-x k") 'c/kill-current-buffer)
+#+end_src
+
+** commment-or-uncomment-region-or-line
+#+begin_src emacs-lisp
+  (defun c/comment-or-uncomment-region-or-line ()
+    (interactive)
+    (let (beg end)
+      (if (region-active-p)
+          (setq beg (region-beginning) end (region-end))
+        (setq beg (line-beginning-position) end (line-end-position)))
+      (comment-or-uncomment-region beg end)))
+  (global-set-key (kbd "C-;") 'c/comment-or-uncomment-region-or-line)
+#+end_src
+
+** insert-parens-around-region
+#+begin_src emacs-lisp
+  (defun c/insert-parens-around-region ()
+    "Insert parentheses around the selected region."
+    (interactive)
+    (let ((beg (region-beginning))
+          (end (region-end)))
+      (save-excursion
+        (goto-char end)
+        (insert ")")
+        (goto-char beg)
+        (insert "("))))
+  (global-set-key (kbd "C-(") 'c/insert-parens-around-region)
+#+end_src
+
+** super-backspace
+#+begin_src emacs-lisp
+  (defun c/super-backspace ()
+    (interactive)
+    (let ((orig-point (point)))
+      (skip-chars-backward " \t\n")
+      (if (= (point) orig-point)
+          (backward-kill-word 1)
+        (delete-region (point) orig-point))))
+  (global-set-key (kbd "<C-backspace>") 'c/super-backspace)
+#+end_src
+
+** fix-indentation
+#+begin_src emacs-lisp
+  (defun c/fix-indentation ()
+    (interactive)
+    (save-excursion
+      (mark-whole-buffer)
+      (indent-region (point-min) (point-max) nil)))
+#+end_src
+
+** cycle-themes
+#+begin_src emacs-lisp
+  (defun c/cycle-themes ()
+    "Cycle through all installed themes, disabling all other themes."
+    (interactive)
+    (let* ((current-theme (car custom-enabled-themes))
+           (theme-list (custom-available-themes))
+           (random-theme (nth (random (length theme-list)) theme-list)))
+      (disable-theme current-theme)
+      (load-theme random-theme t)
+      (mapc 'disable-theme (remove random-theme custom-enabled-themes)))
+    (message "Theme: %s" (car custom-enabled-themes)))
+  ;; (global-set-key (kbd "C-'") 'c/cycle-themes)
+#+end_src
+
+** disable-all-themes-except-current
+#+begin_src emacs-lisp
+  (defun c/disable-all-themes-except-current ()
+    "Disable all themes except for the currently enabled one."
+    (interactive)
+    (dolist (theme custom-enabled-themes)
+      (unless (eq theme (car custom-enabled-themes))
+        (disable-theme theme))))
+#+end_src
+
+** estimate-elisp-buffer-execution-time
+#+begin_src emacs-lisp
+  (defun c/estimate-elisp-buffer-execution-time ()
+    (interactive)
+    (let ((start-time (current-time)))
+      (eval-buffer)
+      (message "Execution time: %s seconds"
+               (float-time (time-since start-time)))))
+#+end_src
+
+** add-package-to-config
+#+begin_src emacs-lisp
+(defun c/add-package-to-config (package)
+  (interactive "sEnter package name: ")
+  (let ((config-file "~/.emacs.d/config.org")
+        (package-symbol (intern package)))
+    (with-current-buffer (find-file-noselect config-file)
+      (goto-char (point-max))
+      (insert (format "\n** Package: %s\n\n" package-symbol))
+      (insert "#+BEGIN_SRC emacs-lisp\n")
+      (insert (format "(use-package %s)\n" package-symbol))
+      (insert "#+END_SRC\n"))
+    (message "Added package '%s' to configuration file." package)))
+#+end_src
+
+** find-and-replace
+#+begin_src emacs-lisp
+  (defun c/find-and-replace ()
+    "Queries the entire buffer for a string and replaces it with another string."
+    (interactive)
+    (save-excursion
+      (beginning-of-buffer)
+      (query-replace (read-string "Search: ")
+                     (read-string "Replace: "))))
+#+end_src
+
+
+* Keybinds
+** Windows
+#+begin_src emacs-lisp
+  ;; (global-set-key (kbd "C-o") 'other-window)
+  ;; (global-set-key (kbd "C-x o") 'switch-window)
+  ;; (global-set-key (kbd "M-o") 'balance-windows)
+  ;; (add-hook 'term-mode-hook
+  ;;           (lambda ()
+  ;;             (define-key term-raw-map (kbd "C-o") 'other-window)
+  ;;             (define-key term-raw-map (kbd "C-q") 'c/remove-window)))
+#+end_src
+
+** Which-Key
+#+begin_src emacs-lisp
+  (use-package which-key
+    :config
+    (which-key-mode)
+    (setq which-key-idle-delay 1)
+    (setq max-mini-window-height 0.5))
+#+end_src
+
+** General
+#+begin_src emacs-lisp
+  (use-package general
+    :init
+    (global-unset-key (kbd "C-SPC"))
+    :config
+    (general-create-definer rune/leader-keys
+      :prefix "C-SPC")
+    (rune/leader-keys
+      "C-e" '((lambda () (interactive) (push-mark (point) nil t) (move-end-of-line nil)) :which-key nil)
+      "C-a" '((lambda () (interactive) (push-mark (point) nil t) (move-beginning-of-line nil)) :which-key nil)
+      "C-f" '((lambda () (interactive) (push-mark (point) nil t) (forward-char nil)) :which-key nil)
+      "C-b" '((lambda () (interactive) (push-mark (point) nil t) (backward-char nil)) :which-key nil)
+      "C-p" '((lambda () (interactive) (push-mark (point) nil t) (previous-line nil)) :which-key nil)
+      "C-n" '((lambda () (interactive) (push-mark (point) nil t) (next-line nil) :which-key nil))
+      "M->" '((lambda () (interactive) (push-mark (point) nil t) (end-of-buffer nil) :which-key nil))
+      "M-<" '((lambda () (interactive) (push-mark (point) nil t) (beginning-of-buffer nil) :which-key nil))))
+
+#+end_src
+
+** Hydra
+#+begin_src emacs-lisp
+  (use-package hydra)
+
+  (defhydra hydra-text-scale (:timeout nil)
+    "scale text"
+    ("j" text-scale-increase "in")
+    ("k" text-scale-decrease "out")
+    ("f" nil "finished" :exit t))
+
+  (rune/leader-keys
+    "t"  '(:ignore t :which-key "toggles")
+    "tt" '(counsel-load-theme :which-key "choose theme")
+    "ts" '(hydra-text-scale/body :which-key "scale text"))
+#+end_src
+
+
+* Packages
+** Ranger
+#+begin_src emacs-lisp
+  (use-package ranger)
+#+end_src
+
+** Writeroom-Mode
+#+begin_src emacs-lisp
+  (use-package writeroom-mode)
+#+end_src
+
+
