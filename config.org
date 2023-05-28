@@ -1,27 +1,11 @@
 #+TITLE: Emacs Configuration File
 
 * Emacs
-** Performance
-#+begin_src emacs-lisp
-  (setq gc-cons-threshold 100000000)
-  (setq read-process-output-max (* 1024 1024))
-  (add-hook 'after-init-hook #'(lambda ()
-                                 (setq gc-cons-threshold 800000)))
-#+end_src
-
 ** Autosave|Backups|Lockfiles
 #+begin_src emacs-lisp
-  (defconst emacs-tmp-dir (expand-file-name (format "emacs%d" (user-uid)) temporary-file-directory))
-  (setq
-   backup-by-copying t
-   delete-old-versions t
-   kept-new-versions 6
-   kept-old-versions 2
-   version-control t
-   auto-save-list-file-prefix emacs-tmp-dir
-   auto-save-file-name-transforms `((".*" ,emacs-tmp-dir t))
-   backup-directory-alist `((".*" . ,emacs-tmp-dir)))
-  (setq create-lockfiles nil)
+  (setq auto-save-default nil
+        create-lockfiles nil
+        make-backup-files nil)
 #+end_src
 
 ** Menubar|Toolbar|Scrollbar|Tooltip
@@ -34,7 +18,7 @@
 
 ** Fringe
 #+begin_src emacs-lisp
-  (set-fringe-mode 0)
+  ;; (set-fringe-mode 0)
 #+end_src
 
 ** Scrolling
@@ -56,7 +40,7 @@
 ** UI Enhancement
 #+begin_src emacs-lisp
   (setq-default cursor-type 'box)
-  (global-hl-line-mode t)
+  ;; (global-hl-line-mode t)
   (global-prettify-symbols-mode t)
   (display-time-mode 1)
 #+end_src
@@ -65,6 +49,8 @@
 #+begin_src emacs-lisp
   (defun enable-line-numbers ()
     (setq-local display-line-numbers-width 3)
+    (set-face-attribute 'line-number nil :height (face-attribute 'default :height))
+    (set-face-attribute 'line-number-current-line nil :height (face-attribute 'default :height))
     (display-line-numbers-mode))
 
   (add-hook 'prog-mode-hook #'enable-line-numbers)
@@ -72,10 +58,11 @@
 
 ** Wrapping
 #+begin_src emacs-lisp
-  (defun enable-truncate-lines ()
-    (setq-local truncate-lines t))
+  (add-hook 'prog-mode-hook
+            (lambda ()
+              (setq truncate-lines nil)
+              (visual-line-mode 1)))
 
-  (add-hook 'prog-mode-hook #'enable-truncate-lines)
 #+end_src
 
 ** Misc
@@ -134,7 +121,7 @@
 ** Font
 #+begin_src emacs-lisp
   ;;(set-face-attribute 'default nil :font "Hack Nerd Font Mono 11")
-  (set-face-attribute 'default nil :font "FiraCode Nerd Font Mono" :height 130)
+  (set-face-attribute 'default nil :font "FiraCode Nerd Font Mono 11")
 #+end_src
 
 ** Theme
@@ -150,6 +137,8 @@
     (setq tron-legacy-theme-softer-bg nil))
   (use-package color-theme-sanityinc-tomorrow)
   (use-package atom-one-dark-theme)
+  (use-package exotica-theme)
+  (use-package nordic-night-theme)
 
   ;; (load-theme 'doom-palenight t)'
   ;; (load-theme 'atom-one-dark t)
@@ -165,8 +154,14 @@
   ;; (load-theme 'wheatgrass t)
   ;; (load-theme 'tron-legacy t)
   ;; (load-theme 'doom-monokai-machine t)
-  (load-theme 'sanityinc-tomorrow-night t)
   ;; (load-theme 'sexy-monochrome t)
+  ;; (load-theme 'sanityinc-tomorrow-night t)
+  ;; (load-theme 'exotica t)
+  (load-theme 'nordic-night t)
+
+
+  (custom-set-faces
+   '(org-hide ((t (:background "#121212" :foreground "#121212")))))
 #+end_src
 
 ** Window Transparency
@@ -207,16 +202,11 @@
 #+begin_src emacs-lisp
   (use-package all-the-icons
     :config
-    ;; (setq all-the-icons-color-icons nil)
-    ;; (custom-set-faces
-    ;;   '(all-the-icons-face ((t (:foreground "#00ffcc")))) ; set the foreground color to a cyan/green color
-    ;;   '(all-the-icons-ivy-buffer-match-face ((t (:foreground "#00ffcc"))))) ; set the foreground color to a cyan/green color
+    (setq all-the-icons-color-icons nil)
+    (custom-set-faces
+     '(all-the-icons-face ((t (:foreground "#00ffcc")))) ; set the foreground color to a cyan/green color
+     '(all-the-icons-ivy-buffer-match-face ((t (:foreground "#00ffcc"))))) ; set the foreground color to a cyan/green color
     )
-#+end_src
-
-** Autothemer
-#+begin_src emacs-lisp
-  (use-package autothemer)
 #+end_src
 
 
@@ -282,14 +272,7 @@
     :config
     (add-hook 'prog-mode-hook 'highlight-indent-guides-mode)
     (setq highlight-indent-guides-method 'character)
-    (setq highlight-indent-guides-responsive 'topmost))
-#+end_src
-
-** Multiple Cursors
-#+begin_src emacs-lisp
-  (use-package multiple-cursors
-    :config
-    (global-set-key (kbd "C-`") 'mc/edit-lines))
+    (setq highlight-indent-guides-responsive 'top))
 #+end_src
 
 
@@ -320,7 +303,24 @@
     (define-key helm-find-files-map (kbd "C-<backspace>") 'helm-find-files-up-one-level)
     (setq helm-find-files-doc-header nil)
     (global-set-key (kbd "M-x") 'helm-M-x)
-    (global-set-key (kbd "C-x C-f") 'helm-find-files))
+    (global-set-key (kbd "C-x C-f") 'helm-find-files)
+    :init
+    (setq helm-M-x-fuzzy-match t
+          helm-mode-fuzzy-match t
+          helm-buffers-fuzzy-matching t
+          helm-recentf-fuzzy-match t
+          helm-locate-fuzzy-match t
+          helm-semantic-fuzzy-match t
+          helm-imenu-fuzzy-match t
+          helm-completion-in-region-fuzzy-match t
+          helm-candidate-number-list 150
+          helm-split-window-in-side-p t
+          helm-move-to-line-cycle-in-source t
+          helm-echo-input-in-header-line t
+          helm-autoresize-max-height 0
+          helm-autoresize-min-height 20)
+    :config
+    (helm-mode 1))
 
   (use-package helm-icons
     :config
@@ -338,30 +338,31 @@
 
 ** Flycheck
 #+begin_src emacs-lisp
-  (use-package flycheck
-    :init (global-flycheck-mode)
-    :config
-    ;; (setq flycheck-highlighting-mode 'symbols)
-    ;; (setq flycheck-error-list-minimum-level 'error)
-    (set-face-attribute 'flycheck-error nil :underline '(:style line :color "red3" :weight bold))
-    (set-face-attribute 'flycheck-warning nil :underline nil)
-    (set-face-attribute 'flycheck-info nil :underline nil)
-    ;; (setq flycheck-indication-mode nil)
-    (custom-set-faces
-     '(flycheck-error ((t (:underline (:style line :color "#ff87d7")))))
-     '(flycheck-warning ((t (:underline (:style line :color "#ffaf00")))))
-     '(flycheck-info ((t (:underline (:style line :color "#87d7ff"))))))
-    )
+  ;; (use-package flycheck
+  ;;   :hook (prog-mode . flycheck-mode)
+  ;;   :config
+  ;;   (setq flycheck-highlighting-mode 'symbols)
+  ;;   (set-face-attribute 'flycheck-error nil :underline '(:style line :color "red3" :weight bold))
+  ;;   (set-face-attribute 'flycheck-warning nil :underline nil)
+  ;;   (set-face-attribute 'flycheck-info nil :underline nil)
+  ;;   (setq flycheck-highlighting-mode nil)
+  ;;   (setq flycheck-indication-mode nil)
+  ;;   (custom-set-faces
+  ;;    '(flycheck-error ((t (:underline (:style line :color "#ff87d7")))))
+  ;;    ;; '(flycheck-warning ((t (:underline (:style line :color "#ffaf00")))))
+  ;;    ;; '(flycheck-info ((t (:underline (:style line :color "#87d7ff"))))))
+  ;;    '(flycheck-warning nil :underline nil)
+  ;;    '(flycheck-info nil : underline nil))
+  ;;   )
 #+end_src
 
 ** Company
 #+begin_src emacs-lisp
   (use-package company
-    ;; :init
-    ;; (add-hook 'after-init-hook 'global-company-mode)
+    :hook (prog-mode . company-mode)
     :config
-    (global-company-mode 1)
     (setq company-text-icons-add-background t)
+    (setq company-backends '(company-capf))
     :bind
     (:map company-active-map ("<tab>" . company-complete-selection))
     (:map company-active-map ("<return>" . nil))
@@ -400,7 +401,7 @@
             (neo-buffer--unlock-width)
             (delete-window neo-global--window))
         (neotree)))
-    ;; (global-set-key (kbd "C-d") 'c/toggle-neotree-sidebar)
+    (global-set-key (kbd "C-d") 'c/toggle-neotree-sidebar)
     ;; Remove header line after neotree is created
     (add-hook 'neo-after-create-hook
               (lambda (&rest _) (setq-local header-line-format nil)))
@@ -423,6 +424,14 @@
     (add-hook 'after-init-hook (lambda ()
                                  (neotree-show)
                                  (neotree-hide)))
+
+    (add-hook 'prog-mode-hook
+              (lambda ()
+                (local-set-key (kbd "C-d") 'c/toggle-neotree-sidebar)))
+
+    ;; Remove C-d binding in cc-mode
+    (eval-after-load 'cc-mode
+      '(define-key c-mode-base-map (kbd "C-d") nil))
     )
 #+end_src
 
@@ -443,7 +452,6 @@
   (use-package projectile
     :diminish projectile-mode
     :config (projectile-mode)
-    :custom ((projectile-completion-system 'ivy))
     :bind-keymap
     ("C-c p" . projectile-command-map)
     :init
@@ -451,22 +459,17 @@
       (setq projectile-project-search-path '("~/Documents/code"))))
 #+end_src
 
-** Counsel Projectile
-#+begin_src emacs-lisp
-  (use-package counsel-projectile
-    :config (counsel-projectile-mode))
-#+end_src
-
 ** Magit
-#+begin_example
-  ;;(use-package magit
-  ;;  :custom
-  ;;  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
-#+end_example
+#+begin_src  emacs-lisp
+  (use-package magit
+    :custom
+    (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+#+end_src
 
 ** LSP
 #+begin_src emacs-lisp
   (use-package lsp-mode
+    :hook (prog-mode . lsp-mode)
     :commands (lsp lsp_deferred)
     :init
     (setq lsp-keymap-prefix "C-c l")
@@ -497,21 +500,6 @@
 ** LSP-Java
 #+begin_src emacs-lisp
   (use-package lsp-java)
-#+end_src
-
-** Company
-#+begin_src emacs-lisp
-  (use-package company
-    :after lsp-mode
-    ;; :hook (prog-mode . lsp-mode)
-    :bind
-    (:map company-active-map
-          ("<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("<tab>" . company-indent-or-complete-common))
-    :custom
-    (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0))
 #+end_src
 
 
@@ -571,8 +559,8 @@
   (setq tab-bar-new-tab-choice (lambda () (get-buffer-create "*scratch*")))
   (setq tab-bar-new-tab-to 'rightmost)
   (set-face-attribute 'tab-bar nil :height 0.8)
-  (global-set-key (kbd "C-=") 'tab-bar-new-tab)
-  (global-set-key (kbd "C--") 'tab-bar-close-tab)
+  ;; (global-set-key (kbd "C-=") 'tab-bar-new-tab)
+  ;; (global-set-key (kbd "C--") 'tab-bar-close-tab)
 #+end_src
 
 ** Switch-Window
@@ -593,17 +581,18 @@
     (add-hook 'org-mode-hook (lambda () (org-indent-mode)))
     (add-hook 'org-mode-hook (lambda () (visual-line-mode)))
     (font-lock-add-keywords 'org-mode
-                            '(("^ *\\([-]\\) "
-                               (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+			    '(("^ *\\([-]\\) "
+			       (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
     (dolist (face '((org-level-1 . 1.2)
-                    (org-level-2 . 1.1)
-                    (org-level-3 . 1.05)
-                    (org-level-4 . 1.0)
-                    (org-level-5 . 1.1)
-                    (org-level-6 . 1.1)
-                    (org-level-7 . 1.1)
-                    (org-level-8 . 1.1)))
-      (set-face-attribute (car face) nil :font "Ubuntu" :weight 'bold :height (cdr face))))
+		    (org-level-2 . 1.1)
+		    (org-level-3 . 1.05)
+		    (org-level-4 . 1.0)
+		    (org-level-5 . 1.1)
+		    (org-level-6 . 1.1)
+		    (org-level-7 . 1.1)
+		    (org-level-8 . 1.1)))
+      (set-face-attribute (car face) nil :font "Ubuntu" :weight 'bold :height (cdr face)))
+    )
 #+end_src
 
 ** Org-Bullets
@@ -665,7 +654,7 @@
     (balance-windows)
     (other-window 1))
   (global-set-key (kbd "C-x 2") 'c/h-split)
-  ;; (global-set-key (kbd "C-h") 'c/h-split)
+  (global-set-key (kbd "C-2") 'c/h-split)
 #+end_src
 
 ** v-split
@@ -676,7 +665,7 @@
     (balance-windows)
     (other-window 1))
   (global-set-key (kbd "C-x 3") 'c/v-split)
-  ;; (global-set-key (kbd "C-v") 'c/v-split)
+  (global-set-key (kbd "C-3") 'c/v-split)
 #+end_src
 
 ** remove-window
@@ -685,7 +674,7 @@
     (interactive)
     (delete-window)
     (balance-windows))
-  ;; (global-set-key (kbd "C-q") 'c/remove-window)
+  (global-set-key (kbd "C-0") 'c/remove-window)
 #+end_src
 
 ** kill-current-buffer
@@ -693,34 +682,19 @@
   (defun c/kill-current-buffer ()
     (interactive)
     (kill-buffer (current-buffer)))
-  ;; (global-set-key (kbd "C-x k") 'c/kill-current-buffer)
+  (global-set-key (kbd "C-x k") 'c/kill-current-buffer)
 #+end_src
 
 ** commment-or-uncomment-region-or-line
 #+begin_src emacs-lisp
   (defun c/comment-or-uncomment-region-or-line ()
+    "Comments or uncomments the current line or region."
     (interactive)
-    (let (beg end)
-      (if (region-active-p)
-          (setq beg (region-beginning) end (region-end))
-        (setq beg (line-beginning-position) end (line-end-position)))
-      (comment-or-uncomment-region beg end)))
+    (if (region-active-p)
+        (comment-or-uncomment-region (region-beginning) (region-end))
+      (comment-or-uncomment-region (line-beginning-position) (line-end-position)))
+    (setq deactivate-mark nil))
   (global-set-key (kbd "C-;") 'c/comment-or-uncomment-region-or-line)
-#+end_src
-
-** insert-parens-around-region
-#+begin_src emacs-lisp
-  (defun c/insert-parens-around-region ()
-    "Insert parentheses around the selected region."
-    (interactive)
-    (let ((beg (region-beginning))
-          (end (region-end)))
-      (save-excursion
-        (goto-char end)
-        (insert ")")
-        (goto-char beg)
-        (insert "("))))
-  (global-set-key (kbd "C-(") 'c/insert-parens-around-region)
 #+end_src
 
 ** super-backspace
@@ -781,17 +755,17 @@
 
 ** add-package-to-config
 #+begin_src emacs-lisp
-(defun c/add-package-to-config (package)
-  (interactive "sEnter package name: ")
-  (let ((config-file "~/.emacs.d/config.org")
-        (package-symbol (intern package)))
-    (with-current-buffer (find-file-noselect config-file)
-      (goto-char (point-max))
-      (insert (format "\n** Package: %s\n\n" package-symbol))
-      (insert "#+BEGIN_SRC emacs-lisp\n")
-      (insert (format "(use-package %s)\n" package-symbol))
-      (insert "#+END_SRC\n"))
-    (message "Added package '%s' to configuration file." package)))
+  (defun c/add-package-to-config (package)
+    (interactive "sEnter package name: ")
+    (let ((config-file "~/.emacs.d/config.org")
+          (package-symbol (intern package)))
+      (with-current-buffer (find-file-noselect config-file)
+        (goto-char (point-max))
+        (insert (format "\n** Package: %s\n\n" package-symbol))
+        (insert "#+BEGIN_SRC emacs-lisp\n")
+        (insert (format "(use-package %s)\n" package-symbol))
+        (insert "#+END_SRC\n"))
+      (message "Added package '%s' to configuration file." package)))
 #+end_src
 
 ** find-and-replace
@@ -805,13 +779,36 @@
                      (read-string "Replace: "))))
 #+end_src
 
+** show-keybindings
+#+begin_src emacs-lisp
+  (defun show-mode-keybindings (mode)
+    "Display keybindings and their functionality for a specific MODE."
+    (interactive (list (completing-read "Enter mode name (default: default): "
+                                        (mapcar 'car minor-mode-map-alist)
+                                        nil t)))
+    (let* ((mode (if (string-blank-p mode) "default" mode))
+           (mode-map (if (equal mode "global")
+                         (current-global-map)
+                       (or (cdr (assoc (intern mode) minor-mode-map-alist))
+                           (symbol-value (intern (concat mode "-map"))))))
+           (keybindings (if mode-map (where-is-internal nil mode-map) '("No keybindings found.")))
+           (keybindings-cleaned (if (listp keybindings) (mapcar #'key-description keybindings) keybindings))
+           (buf-name (format "*Keybindings: %s*" mode)))
+      (with-output-to-temp-buffer buf-name
+        (princ (format "Keybindings for %s mode:\n\n" mode))
+        (with-current-buffer buf-name
+          (if (listp keybindings-cleaned)
+              (pp keybindings-cleaned (current-buffer))
+            (princ keybindings-cleaned))))))
+#+end_src
+
 
 * Keybinds
 ** Windows
 #+begin_src emacs-lisp
-  ;; (global-set-key (kbd "C-o") 'other-window)
+  (global-set-key (kbd "C-o") 'other-window)
   ;; (global-set-key (kbd "C-x o") 'switch-window)
-  ;; (global-set-key (kbd "M-o") 'balance-windows)
+  (global-set-key (kbd "M-o") 'balance-windows)
   ;; (add-hook 'term-mode-hook
   ;;           (lambda ()
   ;;             (define-key term-raw-map (kbd "C-o") 'other-window)
@@ -841,10 +838,9 @@
       "C-f" '((lambda () (interactive) (push-mark (point) nil t) (forward-char nil)) :which-key nil)
       "C-b" '((lambda () (interactive) (push-mark (point) nil t) (backward-char nil)) :which-key nil)
       "C-p" '((lambda () (interactive) (push-mark (point) nil t) (previous-line nil)) :which-key nil)
-      "C-n" '((lambda () (interactive) (push-mark (point) nil t) (next-line nil) :which-key nil))
-      "M->" '((lambda () (interactive) (push-mark (point) nil t) (end-of-buffer nil) :which-key nil))
-      "M-<" '((lambda () (interactive) (push-mark (point) nil t) (beginning-of-buffer nil) :which-key nil))))
-
+      "C-n" '((lambda () (interactive) (push-mark (point) nil t) (next-line nil)) :which-key nil)
+      "M->" '((lambda () (interactive) (push-mark (point) nil t) (end-of-buffer nil)) :which-key nil)
+      "M-<" '((lambda () (interactive) (push-mark (point) nil t) (beginning-of-buffer nil)) :which-key nil)))
 #+end_src
 
 ** Hydra
@@ -875,4 +871,31 @@
   (use-package writeroom-mode)
 #+end_src
 
+** Minimap
+#+begin_src emacs-lisp
+  (use-package minimap
+   :ensure t
+   :config
+   (setq minimap-window-location 'right
+         minimap-update-delay 0.2
+         minimap-minimum-width 20
+         minimap-width-fraction 0.15
+         minimap-dedicated-window t)
+   (defun toggle-minimap ()
+     (interactive)
+     (if minimap-mode
+         (minimap-mode -1)
+       (minimap-mode 1))))
+#+end_src
 
+** Helpful
+#+begin_src emacs-lisp
+  (use-package helpful
+    :ensure t
+    :bind (("C-h f" . helpful-callable)
+           ("C-h v" . helpful-variable)
+           ("C-h k" . helpful-key))
+    :config
+    ;; Additional configuration or customizations can go here
+    )
+#+end_src
